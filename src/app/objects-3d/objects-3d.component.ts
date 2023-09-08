@@ -31,7 +31,7 @@ export class Objects3dComponent implements OnInit {
       geometry: 'sphere',
     });
 
-    this.loadAndAnimateLogos(5000); // Carregue e anime 10 logos
+    this.loadAndAnimateLogos(1000); // Carregue e anime 10 logos
 
     this.bg.three.camera.position.set(100, 100, 200);
 
@@ -105,6 +105,8 @@ export class Objects3dComponent implements OnInit {
         const z =
           domeRadius * Math.cos(randomLatitude) * Math.sin(randomLongitude);
 
+        modelo3D.scale.set(10, 10, 10); // Defina o tamanho da logo
+
         modelo3D.position.set(x, y, z);
 
         // Adicione o modelo à cena Three.js
@@ -117,33 +119,43 @@ export class Objects3dComponent implements OnInit {
         }); // Adicione um offset aleatório
       }
 
-// Função de atualização para animar as logos
-const animateLogos = () => {
-  for (const logo of this.logos) {
-    // Obtenha a posição atual da logo
-    const { x, y, z } = logo.model.position;
+      // Função de atualização para animar as logos
+      const animateLogos = () => {
+        for (const logo of this.logos) {
+          // Obtenha a posição atual da logo
+          const { x, y, z } = logo.model.position;
 
-    // Calcule uma nova posição com base em um movimento ondulante suave
-    const longitude = Math.atan2(z, x);
-    const latitude = Math.asin(y / domeRadius);
+          // Calcule uma nova posição com base em um movimento ondulante suave
+          const longitude = Math.atan2(z, x);
+          const latitude = Math.asin(y / domeRadius);
 
-    const yOffset = animationAmplitude * Math.sin(time + logo.offset);
-    const newX = domeRadius * Math.cos(latitude) * Math.cos(longitude);
-    const newY = domeRadius * Math.sin(latitude) + yOffset;
-    const newZ = domeRadius * Math.cos(latitude) * Math.sin(longitude);
+          const yOffset = animationAmplitude * Math.sin(time + logo.offset);
+          const newX = domeRadius * Math.cos(latitude) * Math.cos(longitude);
+          const newY = domeRadius * Math.sin(latitude) + yOffset;
+          const newZ = domeRadius * Math.cos(latitude) * Math.sin(longitude);
 
-    // Atualize a posição da logo
-    logo.model.position.set(newX, newY, newZ);
-  }
+          // Verifique se a logo saiu do domo invisível
+          const distanceToCenter = Math.sqrt(
+            newX * newX + newY * newY + newZ * newZ
+          );
+          if (distanceToCenter > domeRadius) {
+            // Ajuste a posição de volta ao domo invisível
+            const scale = domeRadius / distanceToCenter;
+            logo.model.position.x = newX * scale;
+            logo.model.position.y = newY * scale;
+            logo.model.position.z = newZ * scale;
+          } else {
+            logo.model.position.set(newX, newY, newZ);
+          }
+        }
+        // Atualize o tempo para criar o movimento de onda contínuo
+        time += animationSpeed;
 
-  // Atualize o tempo para criar o movimento de onda contínuo
-  time += animationSpeed;
+        // Solicite o próximo quadro de animação
+        requestAnimationFrame(animateLogos);
+      };
 
-  // Solicite o próximo quadro de animação
-  requestAnimationFrame(animateLogos);
-};
-
-animateLogos(); // Inicie a animação
+      animateLogos(); // Inicie a animação
     });
   }
 
@@ -151,7 +163,7 @@ animateLogos(); // Inicie a animação
     // Função de atualização para animar as logos
     const animateLogos = () => {
       for (const logo of this.logos) {
-        logo.model.rotation.y += 0.0001; // Rode a logo em torno do eixo Y ainda mais devagar
+        logo.model.rotation.y += 0.01; // Rode a logo em torno do eixo Y ainda mais devagar
       }
 
       // Solicite o próximo quadro de animação
@@ -159,11 +171,6 @@ animateLogos(); // Inicie a animação
     };
 
     animateLogos(); // Inicie a animação
-  }
-
-  private doSomethingWithModel(modelo3D: Group) {
-    // Faça algo com o modelo3D após o carregamento
-    console.log('Modelo GLTF carregado com sucesso!');
   }
 
   private changeColors() {
