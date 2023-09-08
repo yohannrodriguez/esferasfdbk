@@ -6,6 +6,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { Reflector } from 'three/examples/jsm/objects/Reflector';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { Group } from 'three'; // Importe Group da biblioteca Three.js
 
 @Component({
   selector: 'app-objects3d',
@@ -16,7 +17,7 @@ export class Objects3dComponent implements OnInit {
   private isAnimating = false;
   private composer: EffectComposer | null = null;
   private bg: any;
-  private logos: THREE.Object3D[] = []; // Array para armazenar as logos
+  private logos: { model: Group; offset: number }[] = []; // Array para armazenar as logos
 
   constructor(private el: ElementRef) {}
 
@@ -25,12 +26,12 @@ export class Objects3dComponent implements OnInit {
     this.bg = threejsToys.swarmBackground({
       el: appElement,
       eventsEl: document.body,
-      gpgpuSize: 50,
+      gpgpuSize: 0.0001,
       color: [Math.random() * 0xffffff, Math.random() * 0xffffff],
-      geometry: 'box',
+      geometry: 'sphere',
     });
 
-    this.loadAndAnimateLogos(10000); // Carregue e anime 10 logos
+    this.loadAndAnimateLogos(5000); // Carregue e anime 10 logos
 
     this.bg.three.camera.position.set(100, 100, 200);
 
@@ -87,22 +88,62 @@ export class Objects3dComponent implements OnInit {
   private loadAndAnimateLogos(numLogos: number) {
     const loader = new GLTFLoader();
     loader.load('../../assets/gltf_logo/scene.glb', (gltf) => {
-      for (let i = 0; i < numLogos; i++) {
-        const modelo3D = gltf.scene.clone(); // Clone o modelo
+      const domeRadius = 100; // Raio do domo invisível
+      const animationAmplitude = 1; // Amplitude do movimento de onda reduzida
+      const animationSpeed = 0.001; // Velocidade do movimento de onda reduzida
+      let time = 0;
 
-        // Posição aleatória no espaço
-        modelo3D.position.set(
-          Math.random() * 200 - 100, // posição X aleatória entre -100 e 100
-          Math.random() * 200 - 100, // posição Y aleatória entre -100 e 100
-          Math.random() * 200 - 100  // posição Z aleatória entre -100 e 100
-        );
+      for (let i = 0; i < numLogos; i++) {
+        const modelo3D = gltf.scene.clone() as Group; // Alteração aqui
+
+        // Posição aleatória no espaço dentro do domo
+        const randomLongitude = Math.random() * Math.PI * 2; // Ângulo aleatório em torno do eixo Y
+        const randomLatitude = Math.random() * Math.PI; // Ângulo aleatório em direção ao eixo Y
+        const x =
+          domeRadius * Math.cos(randomLatitude) * Math.cos(randomLongitude);
+        const y = domeRadius * Math.sin(randomLatitude);
+        const z =
+          domeRadius * Math.cos(randomLatitude) * Math.sin(randomLongitude);
+
+        modelo3D.position.set(x, y, z);
 
         // Adicione o modelo à cena Three.js
         this.bg.three.scene.add(modelo3D);
 
         // Adicione a logo ao array de logos
-        this.logos.push(modelo3D);
+        this.logos.push({
+          model: modelo3D as Group,
+          offset: Math.random() * Math.PI * 2,
+        }); // Adicione um offset aleatório
       }
+
+// Função de atualização para animar as logos
+const animateLogos = () => {
+  for (const logo of this.logos) {
+    // Obtenha a posição atual da logo
+    const { x, y, z } = logo.model.position;
+
+    // Calcule uma nova posição com base em um movimento ondulante suave
+    const longitude = Math.atan2(z, x);
+    const latitude = Math.asin(y / domeRadius);
+
+    const yOffset = animationAmplitude * Math.sin(time + logo.offset);
+    const newX = domeRadius * Math.cos(latitude) * Math.cos(longitude);
+    const newY = domeRadius * Math.sin(latitude) + yOffset;
+    const newZ = domeRadius * Math.cos(latitude) * Math.sin(longitude);
+
+    // Atualize a posição da logo
+    logo.model.position.set(newX, newY, newZ);
+  }
+
+  // Atualize o tempo para criar o movimento de onda contínuo
+  time += animationSpeed;
+
+  // Solicite o próximo quadro de animação
+  requestAnimationFrame(animateLogos);
+};
+
+animateLogos(); // Inicie a animação
     });
   }
 
@@ -110,8 +151,7 @@ export class Objects3dComponent implements OnInit {
     // Função de atualização para animar as logos
     const animateLogos = () => {
       for (const logo of this.logos) {
-        logo.position.x += 0.1; // Mova a logo ao longo do eixo X
-        logo.rotation.y += 0.01; // Rode a logo em torno do eixo Y
+        logo.model.rotation.y += 0.0001; // Rode a logo em torno do eixo Y ainda mais devagar
       }
 
       // Solicite o próximo quadro de animação
@@ -121,7 +161,7 @@ export class Objects3dComponent implements OnInit {
     animateLogos(); // Inicie a animação
   }
 
-  private doSomethingWithModel(modelo3D: THREE.Object3D) {
+  private doSomethingWithModel(modelo3D: Group) {
     // Faça algo com o modelo3D após o carregamento
     console.log('Modelo GLTF carregado com sucesso!');
   }
