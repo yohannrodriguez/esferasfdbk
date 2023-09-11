@@ -26,12 +26,12 @@ export class Objects3dComponent implements OnInit {
     this.bg = threejsToys.swarmBackground({
       el: appElement,
       eventsEl: document.body,
-      gpgpuSize: 0.0001,
+      gpgpuSize: 70, // padrao sem bolas 0.0001
       color: [Math.random() * 0xffffff, Math.random() * 0xffffff],
       geometry: 'sphere',
     });
 
-    this.loadAndAnimateLogos(1000); // Carregue e anime 10 logos
+    this.loadAndAnimateLogos(1000); // Carregue e anime logos
 
     this.bg.three.camera.position.set(100, 100, 200);
 
@@ -87,8 +87,8 @@ export class Objects3dComponent implements OnInit {
 
   private loadAndAnimateLogos(numLogos: number) {
     const loader = new GLTFLoader();
-    loader.load('../../assets/gltf_logo/scene.glb', (gltf) => {
-      const domeRadius = 100; // Raio do domo invisível
+    loader.load('../../assets/gltf_logo/ESFERAFDBK.glb', (gltf) => {
+      const domeRadius = 130; // Raio do domo invisível
       const animationAmplitude = 1; // Amplitude do movimento de onda reduzida
       const animationSpeed = 0.001; // Velocidade do movimento de onda reduzida
       let time = 0;
@@ -174,9 +174,12 @@ export class Objects3dComponent implements OnInit {
   }
 
   private changeColors() {
-    const color1 = Math.random() * 0xffffff;
-    const color2 = Math.random() * 0xffffff;
+    const color1 = 0x000000; // pre-estabelecido = Math.random() * 0xffffff
+    const color2 = 0xFFF1F1; // pre-estabelecido = Math.random() * 0xffffff
+    const backgroundColor = new THREE.Color(0x000000); // Substitua pela cor desejada
+    this.bg.three.scene.background = backgroundColor; 
     this.bg.setColors([color1, color2]);
+    
   }
 
   private addRandomFlashes() {
