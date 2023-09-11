@@ -176,7 +176,7 @@ export class Objects3dComponent implements OnInit {
   private changeColors() {
     const color1 = 0x000000; // pre-estabelecido = Math.random() * 0xffffff / PELOTA 
     const color2 = 0xFFF1F1; // pre-estabelecido = Math.random() * 0xffffff / PELOTA
-    const backgroundColor = new THREE.Color(0xFFF1F1); // Substitua pela cor desejada BACKGROUND
+    const backgroundColor = new THREE.Color(0x6A5ACD); // Substitua pela cor desejada BACKGROUND
     this.bg.three.scene.background = backgroundColor; 
     this.bg.setColors([color1, color2]);
     
